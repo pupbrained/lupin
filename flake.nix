@@ -13,41 +13,30 @@
     self,
     nixpkgs,
     utils,
-    naersk,
     fenix,
-  }:
+    ...
+  } @ inputs:
     utils.lib.eachDefaultSystem (system: let
-      pkgs = import nixpkgs {inherit system;};
-      naersk-lib = pkgs.callPackage naersk {};
-    in {
-      defaultPackage = let
-        pkgs = nixpkgs.legacyPackages.${system};
-        toolchain = with fenix.packages.${system};
-          combine [
-            minimal.cargo
-            minimal.rustc
-            targets."${target}".latest.rust-std
-          ];
-      in
-        (naersk.lib.${system}.override {
-          cargo = toolchain;
-          rustc = toolchain;
-        })
-        .buildPackage {
-          src = ./.;
-          buildInputs = with pkgs; [dbus];
-          nativeBuildInputs = with pkgs; [pkg-config];
-        };
+      defaultBinName = "cli";
 
-      defaultApp = utils.lib.mkApp {
-        drv = self.defaultPackage."${system}";
+      pkgs = import nixpkgs {
+        inherit system;
       };
 
-      devShell = with pkgs;
-        mkShell {
-          buildInputs = [dbus];
-          nativeBuildInputs = [pkg-config];
-          RUST_SRC_PATH = rustPlatform.rustLibSrc;
-        };
+      toolchain = fenix.packages.${system}.stable;
+
+      naersk = pkgs.callPackage inputs.naersk {
+        cargo = toolchain.cargo;
+        rustc = toolchain.rustc;
+      };
+    in {
+      defaultPackage = naersk.buildPackage {
+        pname = defaultBinName;
+        src = ./.;
+      };
+
+      devShell = pkgs.mkShell {
+        nativeBuildInputs = [ toolchain.completeToolchain ];
+      };
     });
 }
