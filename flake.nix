@@ -26,7 +26,7 @@
           combine [
             minimal.cargo
             minimal.rustc
-            targets.x86_64-unknown-linux-gnu.latest.rust-std
+            targets."${target}".rust-std
           ];
       in
         (naersk.lib.${system}.override {
