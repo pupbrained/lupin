@@ -1,0 +1,9 @@
+[package]
+name = "lupin_parser"
+description = "Recursive descent parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lupin_lexer = { version = "0.1.0", path = "../lupin_lexer" }
+thiserror = "1.0.40"

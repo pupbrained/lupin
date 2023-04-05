@@ -17,17 +17,17 @@
     ...
   } @ inputs:
     utils.lib.eachDefaultSystem (system: let
-      defaultBinName = "cli";
-
-      pkgs = import nixpkgs {
-        inherit system;
-      };
-
-      toolchain = fenix.packages.${system}.stable;
+      defaultBinName = "lupin_cli";
+      pkgs = import nixpkgs {inherit system;};
+      toolchain = with fenix.packages.${system};
+        fromToolchainFile {
+          file = ./rust-toolchain.toml;
+          sha256 = "sha256-jvoZwAQuaeLQbrd77FCVwHP57XC27RQ9yWMxF/Pc0XY=";
+        };
 
       naersk = pkgs.callPackage inputs.naersk {
-        cargo = toolchain.cargo;
-        rustc = toolchain.rustc;
+        cargo = toolchain;
+        rustc = toolchain;
       };
     in {
       defaultPackage = naersk.buildPackage {
@@ -36,7 +36,7 @@
       };
 
       devShell = pkgs.mkShell {
-        nativeBuildInputs = [ toolchain.completeToolchain ];
+        nativeBuildInputs = [toolchain];
       };
     });
 }

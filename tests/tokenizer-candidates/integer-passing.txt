@@ -1,0 +1,16 @@
+0
+12
+3_4
+3__5
+0
+12
+3_4
+3__5
+0xf
+0Xf
+0xF
+0XF
+0Xdeadbeef
+0xDEA_DBEEF
+0XdEaDbE_eF
+0xDeAdBeEf_

@@ -4,4 +4,5 @@ reorder_impl_items = true
 indent_style = "Block"
 normalize_comments = true
 imports_granularity = "One"
-
+imports_layout = "HorizontalVertical"
+group_imports = "StdExternalCrate"

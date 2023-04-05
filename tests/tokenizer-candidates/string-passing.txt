@@ -1,0 +1,8 @@
+"hello"
+"hello, world!"
+"hello, escaped \"world\"!"
+"\""
+"hello\nworld"
+"hello\rworld"
+"hello\\world"
+"hello\1world"
