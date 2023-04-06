@@ -48,6 +48,7 @@ name = "lupin_cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "lupin_parser",
 ]
 
 [[package]]
