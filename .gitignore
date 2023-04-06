@@ -1,2 +1,5 @@
 target/
 .direnv/
+
+# nix result symlink
+result
