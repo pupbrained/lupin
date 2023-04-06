@@ -1,5 +1,5 @@
 use {
-  crate::token::Token,
+  crate::token::{Float, Token},
   anyhow::Result,
   logos::Logos,
   std::{
@@ -18,36 +18,66 @@ fn read_lines(filename: impl AsRef<Path>) -> Result<Flatten<Lines<BufReader<File
 
 #[test]
 fn floats() {
-  use Token::*;
-
   [
-    ("1.", Some(Float("1.".into()))),
-    ("24_.", Some(Float("24_.".into()))),
-    ("3_49.", Some(Float("3_49.".into()))),
-    ("5.6", Some(Float("5.6".into()))),
-    ("7_8.9", Some(Float("7_8.9".into()))),
-    (".0", Some(Float(".0".into()))),
-    ("._1", Some(Float("._1".into()))),
-    (".0_12", Some(Float(".0_12".into()))),
+    ("1.", Some(Token::Float(Float { value: "1.".into() }))),
+    (
+      "24_.",
+      Some(Token::Float(Float {
+        value: "24_.".into(),
+      })),
+    ),
+    (
+      "3_49.",
+      Some(Token::Float(Float {
+        value: "3_49.".into(),
+      })),
+    ),
+    (
+      "5.6",
+      Some(Token::Float(Float {
+        value: "5.6".into(),
+      })),
+    ),
+    (
+      "7_8.9",
+      Some(Token::Float(Float {
+        value: "7_8.9".into(),
+      })),
+    ),
+    (".0", Some(Token::Float(Float { value: ".0".into() }))),
+    (
+      "._1",
+      Some(Token::Float(Float {
+        value: "._1".into(),
+      })),
+    ),
+    (
+      ".0_12",
+      Some(Token::Float(Float {
+        value: ".0_12".into(),
+      })),
+    ),
   ]
   .iter()
   .for_each(|(candidate, token)| assert_eq!(&Token::lexer(candidate).next(), token));
 }
 
 #[test]
-fn float_test_new_method() {
-  use Token::Float;
-  let _candidates = ["1.", "24_.", "3_49.", "5.6", "7_8.9", ".0", "._1", ".0_12"];
-  let _tokens = [
-    Float("1.".to_owned()),
-    Float("24_.".to_owned()),
-    Float("3_49.".to_owned()),
-    Float("5.6".to_owned()),
-    Float("7_8.9".to_owned()),
-    Float(".0".to_owned()),
-    Float("._1".to_owned()),
-    Float(".0_12".to_owned()),
-  ];
+fn integer_representations() {
+  use {
+    crate::token::Integer::{Binary, Decimal, Hexadecimal},
+    Token::Integer,
+  };
+
+  [
+    ("100", Some(Integer(Decimal("100".into())))),
+    ("0b1011", Some(Integer(Binary("0b1011".into())))),
+    ("0b1011_1010", Some(Integer(Binary("0b1011_1010".into())))),
+    ("0x1a", Some(Integer(Hexadecimal("0x1a".into())))),
+    ("0x1a_2b", Some(Integer(Hexadecimal("0x1a_2b".into())))),
+  ]
+  .iter()
+  .for_each(|(candidate, token)| assert_eq!(&Token::lexer(candidate).next(), token));
 }
 
 #[test]
