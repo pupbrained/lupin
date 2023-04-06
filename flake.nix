@@ -1,4 +1,6 @@
 {
+  description = "lupin: a programming language";
+
   inputs = {
     naersk = {
       url = "github:nix-community/naersk/master";
@@ -6,24 +8,29 @@
     };
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     utils.url = "github:numtide/flake-utils";
-    fenix.url = "github:nix-community/fenix";
+    rust-overlay.url = "github:oxalica/rust-overlay";
   };
 
   outputs = {
     self,
     nixpkgs,
     utils,
-    fenix,
+    rust-overlay,
     ...
   } @ inputs:
     utils.lib.eachDefaultSystem (system: let
       defaultBinName = "lupin_cli";
-      pkgs = import nixpkgs {inherit system;};
-      toolchain = with fenix.packages.${system};
-        fromToolchainFile {
-          file = ./rust-toolchain.toml;
-          sha256 = "sha256-jvoZwAQuaeLQbrd77FCVwHP57XC27RQ9yWMxF/Pc0XY=";
-        };
+
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ (import rust-overlay) ];
+      };
+
+      toolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
+        toolchain.default.override {
+          extensions = [ "rust-analyzer" ];
+          targets = [ ];
+        });
 
       naersk = pkgs.callPackage inputs.naersk {
         cargo = toolchain;
@@ -36,7 +43,7 @@
       };
 
       devShell = pkgs.mkShell {
-        nativeBuildInputs = [toolchain];
+        buildInputs = [ toolchain ];
       };
     });
 }
