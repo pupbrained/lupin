@@ -5,4 +5,6 @@
 fn main() {
   let program = "f32 a := .3";
   lupin_parser::parse(program);
+
+  println!("");
 }

@@ -1,5 +1,5 @@
 use {
-  lupin_lexer::{token, Lexer},
+  lupin_lexer::atom::Atom,
   std::ops::Range,
 };
 
@@ -14,7 +14,7 @@ struct Ast {
 
 impl Ast {
   fn from_lexer(mut lexer: Lexer) -> Self {
-    let program = Block::parse(&mut lexer);
+    let program = Block::parse(&mut lexer);  
   }
 }
 
