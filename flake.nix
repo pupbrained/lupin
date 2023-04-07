@@ -23,13 +23,13 @@
 
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ (import rust-overlay) ];
+        overlays = [(import rust-overlay)];
       };
 
       toolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
         toolchain.default.override {
-          extensions = [ "rust-analyzer" ];
-          targets = [ ];
+          extensions = ["rust-analyzer"];
+          targets = [];
         });
 
       naersk = pkgs.callPackage inputs.naersk {
@@ -43,7 +43,7 @@
       };
 
       devShell = pkgs.mkShell {
-        buildInputs = [ toolchain ];
+        buildInputs = [toolchain];
       };
     });
 }

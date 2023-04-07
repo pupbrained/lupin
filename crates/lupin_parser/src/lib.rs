@@ -93,9 +93,9 @@ mod old {
       let _name = self.name();
 
       if let Some(tok) = self.lexer.peek() {
-        if ParseContext::is_operator(tok) 
+        if ParseContext::is_operator(tok) {
           let _rhs_expr = self.expression();
-        
+        }
       }
 
       String::new()
