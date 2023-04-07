@@ -254,6 +254,22 @@ pub enum Token {
   Unknown,
 }
 
+impl Token {
+  #[must_use] pub const fn token_kind(&self) -> TokenKind {
+    use TokenKind::{Identifier, Todo};
+
+    match self {
+      Self::Identifier(_) => Identifier,
+      _ => Todo,
+    }
+  }
+}
+
+pub enum TokenKind {
+  Identifier,
+  Todo,
+}
+
 impl Display for Integer {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
     match self {

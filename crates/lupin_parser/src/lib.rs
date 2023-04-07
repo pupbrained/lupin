@@ -2,14 +2,20 @@
 
 use lupin_lexer::token::{Identifier, Type};
 
+
+mod ast;
+
 pub struct Tree {
   statements: Vec<Statement>,
+
 }
 
 pub enum AssignKind {
   Mutable,
   Immutable,
 }
+
+// hi pupbrained
 
 /// a variable assignment
 pub struct Statement {
