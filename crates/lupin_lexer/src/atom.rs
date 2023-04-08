@@ -1,4 +1,4 @@
-use logos::{Span, Logos};
+use logos::{Logos, Span};
 
 pub enum TokenizerErrorKind {
   UnknownToken,
@@ -11,8 +11,8 @@ pub struct TokenizerError {
 }
 
 impl TokenizerError {
-  fn new(kind: TokenizerErrorKind, span: Span, slice: String) -> Self {
-    TokenizerError { kind, span, slice }
+  const fn new(kind: TokenizerErrorKind, span: Span, slice: String) -> Self {
+    Self { kind, span, slice }
   }
 }
 
@@ -40,10 +40,10 @@ impl Atom {
   /// Returns `None` if the atom is of variant `Unknown`.
   fn to_token(&self, slice: &str) -> Option<Token> {
     match self {
-      Atom::Identifier => Some(Token::identifier(slice)),
-      Atom::Integer => Some(Token::literal(Literal::Integer(slice.to_owned()))),
-      Atom::Assign => Some(Token::symbol(Symbol::Assign)),
-      _ => todo!(),
+      Self::Identifier => Some(Token::identifier(slice)),
+      Self::Integer => Some(Token::literal(Literal::Integer(slice.to_owned()))),
+      Self::Assign => Some(Token::symbol(Symbol::Assign)),
+      Self::Unknown => todo!(),
     }
   }
 }
@@ -57,17 +57,11 @@ pub enum Literal {
 }
 
 pub enum TokenData {
-  Identifier {
-    value: String,
-  },
+  Identifier { value: String },
 
-  Symbol {
-    symbol: Symbol,
-  },
+  Symbol { symbol: Symbol },
 
-  Literal {
-    literal: Literal,
-  },
+  Literal { literal: Literal },
 
   Eof,
 }
@@ -85,29 +79,31 @@ pub struct Token {
 }
 
 impl Token {
-  fn identifier(value: &str) -> Token {
-    Token {
+  fn identifier(value: &str) -> Self {
+    Self {
       kind: TokenKind::Identifier,
-      data: TokenData::Identifier { value: value.to_owned() },
+      data: TokenData::Identifier {
+        value: value.to_owned(),
+      },
     }
   }
 
-  fn literal(literal: Literal) -> Token { 
-    Token {
+  const fn literal(literal: Literal) -> Self {
+    Self {
       kind: TokenKind::Literal,
       data: TokenData::Literal { literal },
     }
   }
 
-  fn symbol(symbol: Symbol) -> Token {
-    Token {
+  const fn symbol(symbol: Symbol) -> Self {
+    Self {
       kind: TokenKind::Symbol,
       data: TokenData::Symbol { symbol },
     }
   }
 
-  fn eof() -> Token {
-    Token {
+  const fn eof() -> Self {
+    Self {
       kind: TokenKind::Eof,
       data: TokenData::Eof,
     }
@@ -123,7 +119,13 @@ pub fn tokenize(mut lexer: logos::Lexer<Atom>) -> self::Result<Vec<Token>> {
     let slc = lexer.slice();
 
     match atom.to_token(slc) {
-      None => return Err(TokenizerError::new(UnknownToken, lexer.span(), slc.to_owned())),
+      None => {
+        return Err(TokenizerError::new(
+          UnknownToken,
+          lexer.span(),
+          slc.to_owned(),
+        ))
+      }
       Some(tok) => tokens.push(tok),
     }
   }

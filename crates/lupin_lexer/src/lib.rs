@@ -3,10 +3,10 @@
 
 use std::{iter::Peekable, ops::Range};
 
+pub mod atom;
 #[cfg(test)]
 mod tests;
 pub mod token;
-pub mod atom;
 
 // derives Logos
 // no data attached to the variants
