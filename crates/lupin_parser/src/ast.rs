@@ -1,5 +1,5 @@
 use {
-  lupin_lexer::atom::Atom,
+  lupin_lexer::{token, Lexer},
   std::ops::Range,
 };
 
@@ -14,7 +14,8 @@ struct Ast {
 
 impl Ast {
   fn from_lexer(mut lexer: Lexer) -> Self {
-    let program = Block::parse(&mut lexer);  
+    let program = Block::parse(&mut lexer);
+    todo!()
   }
 }
 
@@ -26,6 +27,7 @@ struct Block {
 impl Node for Block {
   fn parse(lexer: &mut Lexer) -> Self {
     let first_statement = Statement::parse(lexer);
+    todo!()
   }
 }
 
@@ -33,7 +35,7 @@ enum Value {
   Name(token::Identifier),
 }
 
-enum Expression {
+pub enum Expression {
   Value(Value),
 }
 
@@ -48,6 +50,7 @@ struct Statement {
 impl Node for Statement {
   fn parse(lexer: &mut Lexer) -> Self {
     let ty = Type::parse(lexer);
+    todo!()
   }
 }
 
@@ -57,6 +60,6 @@ struct Type {
 
 impl Node for Type {
   fn parse(lexer: &mut Lexer) -> Self {
-    
+    todo!()
   }
 }

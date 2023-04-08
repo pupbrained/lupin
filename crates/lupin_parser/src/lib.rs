@@ -1,13 +1,14 @@
 #![warn(clippy::unwrap_used)]
 
-use lupin_lexer::token::{Identifier, Type};
-
+use {
+  ast::Expression,
+  lupin_lexer::token::{Identifier, Type},
+};
 
 mod ast;
 
 pub struct Tree {
   statements: Vec<Statement>,
-
 }
 
 pub enum AssignKind {
@@ -70,12 +71,12 @@ mod old {
     fn name(&mut self) -> Name {
       let next_tok = self.lexer.next_token();
 
-      if let Some(tok @ Token::Float(_)) = next_tok {
-        Name::Literal(tok)
-      } else if let Some(tok @ Token::Identifier(_)) = next_tok {
-        Name::Identifier(tok)
-      } else {
-        panic!("expected name (float or identifier)");
+      match next_tok {
+        Some(tok @ Some(Token::Float(_), _)) => Name::Literal(tok),
+        Some(tok @ Some(Token::Identifier(_), _)) => Name::Identifier(tok),
+        _ => {
+          panic!("expected name (float or identifier)");
+        }
       }
     }
 
@@ -115,13 +116,13 @@ mod old {
     ///
     /// Will panic if it cannot parse a statement
     pub fn statement(&mut self) -> Statement {
-      if let Some(Token::Type(ty)) = self.lexer.next_token() {
-        if let Some(Token::Identifier(ident)) = self.lexer.next_token() {
-          if let Some(Token::Assign | Token::AssignMut) = self.lexer.next_token() {
+      if let Some((Token::Type(ty), _)) = self.lexer.next_token() {
+        if let Some((Token::Identifier(ident), _)) = self.lexer.next_token() {
+          if let Some((Token::Assign, _) | (Token::AssignMut, _)) = self.lexer.next_token() {
             let expr = self.expression();
             Statement {
-              var_ident: ident.into(),
-              ty: ty.into(),
+              var_ident: ident.to_string(),
+              ty: ty.to_string(),
               expr,
             }
           } else {

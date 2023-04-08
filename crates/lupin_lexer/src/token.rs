@@ -255,7 +255,8 @@ pub enum Token {
 }
 
 impl Token {
-  #[must_use] pub const fn token_kind(&self) -> TokenKind {
+  #[must_use]
+  pub const fn token_kind(&self) -> TokenKind {
     use TokenKind::{Identifier, Todo};
 
     match self {
