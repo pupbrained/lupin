@@ -1,5 +1,6 @@
 #![feature(assert_matches, let_chains)]
 #![warn(clippy::pedantic, clippy::nursery, clippy::unwrap_used)]
+#![allow(clippy::missing_errors_doc)] // temporary
 
 use std::{iter::Peekable, ops::Range};
 
