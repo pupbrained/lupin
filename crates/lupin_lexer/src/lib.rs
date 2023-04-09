@@ -1,41 +1,37 @@
 #![feature(assert_matches, let_chains)]
 #![warn(clippy::pedantic, clippy::nursery, clippy::unwrap_used)]
-#![allow(clippy::missing_errors_doc)] // temporary
+#![allow(clippy::single_match_else)]
+#![allow(dead_code)] // TODO: remove this
 
-use std::{iter::Peekable, ops::Range};
+pub use token::{Literal, Symbol, Token, TokenData, TokenKind, Tokens};
+use {logos::Logos, std::ops::Range};
+
+pub type Span = Range<usize>;
+pub type Result<T> = std::result::Result<T, TokenizerError>;
+
+#[derive(Debug)]
+pub enum TokenizerErrorKind {
+  UnknownToken,
+}
+
+#[derive(Debug)]
+pub struct TokenizerError {
+  kind: TokenizerErrorKind,
+  span: Span,
+  slice: String,
+}
+
+impl TokenizerError {
+  const fn new(kind: TokenizerErrorKind, span: Span, slice: String) -> Self {
+    Self { kind, span, slice }
+  }
+}
+
+#[must_use]
+pub fn tokenize(content: &str) -> Tokens<'_> {
+  let lexer = atom::Atom::lexer(content);
+  Tokens::new(lexer)
+}
 
 pub mod atom;
-#[cfg(test)]
-mod tests;
 pub mod token;
-
-// derives Logos
-// no data attached to the variants
-// data instead obtained with the `slice` method of Lexer
-// TODO: move test candidates to repo's root
-
-pub struct Lexer<'s> {
-  iter: Peekable<logos::SpannedIter<'s, token::Token>>,
-}
-
-impl<'s> Lexer<'s> {
-  #[must_use]
-  pub fn new(lexer: logos::Lexer<'s, token::Token>) -> Self {
-    Self {
-      iter: lexer.spanned().peekable(),
-    }
-  }
-
-  pub fn next_token(&mut self) -> Option<(token::Token, Range<usize>)> {
-    self.iter.next()
-  }
-
-  pub fn advance(&mut self) {
-    // gay
-    let _ = self.next_token();
-  }
-
-  // pub fn expect_kind(&mut self, kind: token::TokenKind) -> (token::Token, Range<usize>) {
-  //   if let Some((tok, _)) = self.iter.peek() {}
-  // }
-}

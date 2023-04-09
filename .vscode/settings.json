@@ -1,0 +1,9 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./crates/lupin_lexer/Cargo.toml",
+        "./crates/lupin_lexer/Cargo.toml",
+        "./crates/lupin_parser/Cargo.toml",
+        "./crates/lupin_parser/Cargo.toml",
+        "./crates/lupin_parser/Cargo.toml"
+    ]
+}
