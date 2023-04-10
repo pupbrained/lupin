@@ -13,8 +13,8 @@ pub enum TokenDataMismatch {
 #[derive(Debug)]
 pub enum ParseError {
   TokenizeError(TokenizerError),
-  UnexpectedTokenKind {
-    expected: TokenKind,
+  NoMatch {
+    possible_matches: Vec<TokenKind>,
     found: Token,
   },
   UnexpectedTokenData {

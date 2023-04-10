@@ -9,12 +9,12 @@ use {logos::Logos, std::ops::Range};
 pub type Span = Range<usize>;
 pub type Result<T> = std::result::Result<T, TokenizerError>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum TokenizerErrorKind {
   UnknownToken,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TokenizerError {
   kind: TokenizerErrorKind,
   span: Span,

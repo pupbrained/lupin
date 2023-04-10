@@ -1,19 +1,26 @@
 use {
   crate::{atom::Atom, Span},
-  std::iter::FusedIterator,
+  std::iter::{FusedIterator, Peekable},
 };
+
+pub type TokenMatchResult<T> = crate::Result<Result<T, (Token, Vec<TokenKind>)>>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Symbol {
   Assign,
+  Plus,
+  Comma,
+  LParen,
+  RParen,
+  TwoColons,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Literal {
   Integer(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(clippy::module_name_repetitions)]
 pub enum TokenData {
   Identifier { value: String },
@@ -34,7 +41,7 @@ pub enum TokenKind {
   Eof,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
   data: TokenData,
   kind: TokenKind,
@@ -95,43 +102,12 @@ impl Token {
   }
 }
 
-pub struct Tokens<'s> {
+struct TokensInner<'s> {
   found_eof: bool,
   lexer: logos::Lexer<'s, Atom>,
 }
 
-/// Lazy iterator over Token  
-///   
-/// Lazily turns `Atom`s into `Token`s, returning `Token::Eof` after the last `Atom`. Returns `None` afterwards.
-impl<'s> Tokens<'s> {
-  pub(crate) const fn new(lexer: logos::Lexer<'s, Atom>) -> Self {
-    Self {
-      found_eof: false,
-      lexer,
-    }
-  }
-
-  /// Returns `Result::Ok` with the next token if its kind matches `kind`, `Result::Err` with the next token otherwise.  
-  ///   
-  /// # Errors
-  /// The top-level error is a lexer error, meaning something wrong happened while lexing. The
-  /// inner `Result` represents if the `TokenKind` matched as explained above.
-  pub fn expect(&mut self, kind: TokenKind) -> crate::Result<Result<Token, Token>> {
-    self.next().transpose().map(|mb_tok| {
-      // mb_tok should not be a None variant, since EOF must've been handled.
-      let tok =
-        mb_tok.expect("Some(Eof) handling should prevent iterator from being consumed again");
-
-      if tok.kind == kind {
-        Ok(tok)
-      } else {
-        Err(tok)
-      }
-    })
-  }
-}
-
-impl<'a> Iterator for Tokens<'a> {
+impl<'a> Iterator for TokensInner<'a> {
   type Item = crate::Result<Token>;
 
   fn next(&mut self) -> Option<Self::Item> {
@@ -149,4 +125,65 @@ impl<'a> Iterator for Tokens<'a> {
   }
 }
 
-impl<'a> FusedIterator for Tokens<'a> {}
+impl<'s> FusedIterator for TokensInner<'s> {}
+
+pub struct Tokens<'s> {
+  iter: Peekable<TokensInner<'s>>,
+}
+
+/// Lazy iterator over Token  
+///
+/// Lazily turns `Atom`s into `Token`s, returning `Token::Eof` after the last `Atom`. Returns `None` afterwards.
+impl<'s> Tokens<'s> {
+  pub(crate) fn new(lexer: logos::Lexer<'s, Atom>) -> Self {
+    Self {
+      iter: TokensInner {
+        found_eof: false,
+        lexer,
+      }
+      .peekable(),
+    }
+  }
+
+  /// Returns `Result::Ok` with the next token if its kind matches `kind`, `Result::Err` with the next token otherwise.  
+  ///
+  /// # Errors
+  /// The top-level error is a lexer error, meaning something wrong happened while lexing. The
+  /// inner `Result` represents if the `TokenKind` matched as explained above.
+  pub fn expect(&mut self, possibilities: &[TokenKind]) -> TokenMatchResult<Token> {
+    self.expect_with(possibilities, std::convert::identity)
+  }
+
+  /// # Errors
+  /// shut up
+  /// # Panics
+  /// SHUT UPPPPP :3333
+  pub fn expect_with<F, T>(
+    &mut self,
+    possibilities: &[TokenKind],
+    predicate: F,
+  ) -> TokenMatchResult<T>
+  where
+    F: FnOnce(Token) -> T,
+  {
+    if let Some(result) = self.iter.peek() {
+      match result {
+        Ok(tok) if possibilities.contains(&tok.kind) => {
+          let owned_tok = self
+            .iter
+            .next()
+            .expect("already matched")
+            .expect("already matched");
+
+          let result = predicate(owned_tok);
+
+          Ok(Ok(result))
+        }
+        Ok(tok) => Ok(Err((tok.clone(), possibilities.to_owned()))),
+        Err(err) => Err(err.clone()),
+      }
+    } else {
+      panic!("Some(Eof) handling should prevent iterator from being consumed again");
+    }
+  }
+}

@@ -11,6 +11,14 @@ pub(crate) enum Atom {
 
   #[token("=")]
   Assign,
+  #[token("(")]
+  LParen,
+  #[token(")")]
+  RParen,
+  #[token("::")]
+  TwoColons,
+  #[token(",")]
+  Comma,
 
   #[regex("(0[bB][01_]+|0[xX][0-9a-fA-F_]+|[0-9][0-9_]*)")]
   Integer,
@@ -29,6 +37,10 @@ impl Atom {
       Self::Identifier => Ok(Token::identifier(slice.into_owned(), span)),
       Self::Integer => Ok(Token::literal(Literal::Integer(slice.into_owned()), span)),
       Self::Assign => Ok(Token::symbol(Symbol::Assign, span)),
+      Self::LParen => Ok(Token::symbol(Symbol::LParen, span)),
+      Self::RParen => Ok(Token::symbol(Symbol::RParen, span)),
+      Self::TwoColons => Ok(Token::symbol(Symbol::TwoColons, span)),
+      Self::Comma => Ok(Token::symbol(Symbol::Comma, span)),
       Self::Unknown => Err(TokenizerError::new(
         TokenizerErrorKind::UnknownToken,
         span,
