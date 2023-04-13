@@ -6,7 +6,6 @@
 pub use token::{Token, TokenKind, Span};
 pub use atom::Symbol;
 
-pub type Span = Range<usize>;
 pub type Result<T> = std::result::Result<T, TokenizerError>;
 
 #[derive(Debug, Clone, Copy)]
@@ -25,12 +24,6 @@ impl TokenizerError {
   const fn new(kind: TokenizerErrorKind, span: Span, slice: String) -> Self {
     Self { kind, span, slice }
   }
-}
-
-#[must_use]
-pub fn tokenize(content: &str) -> Tokens<'_> {
-  let lexer = atom::Atom::lexer(content);
-  Tokens::new(lexer)
 }
 
 pub mod atom;

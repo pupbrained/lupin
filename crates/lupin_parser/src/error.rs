@@ -1,6 +1,5 @@
 use lupin_lexer::{Token, TokenKind, Symbol};
 
-
 #[derive(Debug)]
 pub enum Expectation {
   Token(TokenKind),
