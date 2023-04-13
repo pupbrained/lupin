@@ -7,6 +7,7 @@ pub type Span = Range<usize>;
 
 /// Represents the category of a token.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+
 pub enum TokenKind {
   /// A symbol, usually operators, such as `+`, `-`, `=`, `:=`, `?`, etc.
   Symbol,
