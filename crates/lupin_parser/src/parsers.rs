@@ -5,6 +5,7 @@ use std::marker::PhantomData;
 
 macro_rules! delimiter_impl {
   ($name:ident, $starting_delim:expr, $ending_delim:expr) => {
+    #[derive(Debug)]
     struct $name;
 
     impl self::Delimiter for $name {
@@ -318,5 +319,63 @@ where
       ending_delim,
       _marker: PhantomData,
     }
+  }
+}
+
+#[derive(Debug)]
+struct SingleFuncArg {
+  ty: Type,
+  ident: Token,
+}
+
+impl Node for SingleFuncArg {
+  fn name() -> &'static str {
+    "function argument"
+  }
+
+  fn parse(state: &mut ParserState) -> crate::Result<Self> {
+    let ty = Type::parse(state)?;
+    let ident = expect_token(state, TokenKind::Identifier)?;
+
+    Ok(SingleFuncArg { ty, ident })
+  }
+}
+
+#[derive(Debug)]
+struct FuncArgs {
+  args: DelimitedPunctuated<SingleFuncArg, ParenDelimiter>,
+}
+
+impl Node for FuncArgs {
+  fn name() -> &'static str {
+    "function arguments"
+  }
+
+  fn parse(state: &mut ParserState) -> crate::Result<Self> {
+    let args = DelimitedPunctuated::parse(state)?;
+    Ok(FuncArgs { args })
+  }
+}
+
+#[derive(Debug)]
+pub struct FuncDef {
+  ty: Type,
+  ident: Token,
+  two_colons: Token,
+  args: FuncArgs,
+}
+
+impl Node for FuncDef {
+  fn name() -> &'static str {
+    "function definition"
+  }
+
+  fn parse(state: &mut ParserState) -> crate::Result<Self> {
+    let ty = Type::parse(state)?;
+    let ident = expect_token(state, TokenKind::Identifier)?;
+    let two_colons = expect_symbol(state, Symbol::TwoColons)?;
+    let args = FuncArgs::parse(state)?;
+
+    Ok(FuncDef { ty, ident, two_colons, args })
   }
 }

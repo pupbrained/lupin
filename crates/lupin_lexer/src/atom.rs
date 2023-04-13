@@ -18,6 +18,8 @@ pub enum Symbol {
   RParen,
   /// The plus sign (`+`)
   Plus,
+  /// Two colons, turbofish (`::`)
+  TwoColons
 }
 
 impl Symbol {
@@ -43,6 +45,8 @@ pub(crate) enum Atom {
   RParen,
   #[token("+")]
   Plus,
+  #[token("::")]
+  TwoColons,
 
   #[regex("(0[bB][01_]+|0[xX][0-9a-fA-F_]+|[0-9][0-9_]*)", as_string)]
   Integer(String),
@@ -77,6 +81,7 @@ impl Atom {
         LParen,
         RParen,
         Plus,
+        TwoColons,
       }),
       literals({
         Integer,
@@ -97,6 +102,7 @@ impl Atom {
       Atom::RParen => Symbol::RParen,
       Atom::LParen => Symbol::LParen,
       Atom::Plus => Symbol::Plus,
+      Atom::TwoColons => Symbol::TwoColons,
       _ => panic!("atom is NOT a symbol"),
     }
   }
