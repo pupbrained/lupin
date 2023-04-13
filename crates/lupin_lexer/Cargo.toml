@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.70"
-logos = "0.12.1"
+logos = "0.13"
 thiserror = "1.0.40"

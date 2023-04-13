@@ -1,152 +1,136 @@
-use {
-  crate::{atom::Atom, Span},
-  std::iter::FusedIterator,
-};
+use logos::Logos;
+use crate::atom::{Atom, Symbol};
+use std::ops::Range;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum Symbol {
-  Assign,
-}
+/// The start and end index of a token.
+pub type Span = Range<usize>;
 
-#[derive(Debug)]
-pub enum Literal {
-  Integer(String),
-}
-
-#[derive(Debug)]
-#[allow(clippy::module_name_repetitions)]
-pub enum TokenData {
-  Identifier { value: String },
-
-  Symbol { symbol: Symbol },
-
-  Literal { literal: Literal },
-
-  Eof,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-#[allow(clippy::module_name_repetitions)]
+/// Represents the category of a token.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TokenKind {
-  Identifier,
+  /// A symbol, usually operators, such as `+`, `-`, `=`, `:=`, `?`, etc.
   Symbol,
+  /// A name a value can intake, such as `foo` or `bar2`.
+  Identifier,
+  /// A literal value, like a number or string.
   Literal,
+  /// The end of the file.
   Eof,
+  /// An unknown token, of which no known rules could match against, such
+  /// as `%`, which is not part of Lupin's syntax.
+  Unknown,
 }
 
-#[derive(Debug)]
+/// Data associated with a certain token. Can be either an Atom (most
+/// common, for all 'normal' tokens), a string containing an unknown
+/// token sequence, or no data at all.
+#[derive(Debug, Clone)]
+pub(crate) enum TokenData {
+  Atom(Atom),
+  FromUnknown(String),
+  None,
+}
+
+/// A spanned token with its data.
+#[derive(Debug, Clone)]
 pub struct Token {
-  data: TokenData,
+  /// The kind of token represented by `atom`, or `Eof`.
   kind: TokenKind,
+  /// The data associated to this token, most often being an atom. See `TokenData`.
+  data: TokenData,
+  /// The span of the token.
   span: Span,
 }
 
 impl Token {
-  #[must_use]
-  pub const fn identifier(value: String, span: Span) -> Self {
-    Self {
+  /// Returns a token with a `TokenKind` of `Identifier`.
+  pub(crate) fn identifier(atom: Atom, span: Span) -> Token {
+    Token {
       kind: TokenKind::Identifier,
-      data: TokenData::Identifier { value },
+      data: TokenData::Atom(atom),
       span,
     }
   }
 
-  #[must_use]
-  pub const fn literal(literal: Literal, span: Span) -> Self {
-    Self {
-      kind: TokenKind::Literal,
-      data: TokenData::Literal { literal },
-      span,
-    }
-  }
-
-  #[must_use]
-  pub const fn symbol(symbol: Symbol, span: Span) -> Self {
-    Self {
+  /// Returns a token with a `TokenKind` of `Symbol`.
+  pub(crate) fn symbol(atom: Atom, span: Span) -> Token {
+    Token {
       kind: TokenKind::Symbol,
-      data: TokenData::Symbol { symbol },
+      data: TokenData::Atom(atom),
+      span,
+    }
+  }
+  /// Returns a token with a `TokenKind` of `Literal`.
+  pub(crate) fn literal(atom: Atom, span: Span) -> Token {
+    Token {
+      kind: TokenKind::Literal,
+      data: TokenData::Atom(atom),
       span,
     }
   }
 
-  #[must_use]
-  pub const fn eof(span: Span) -> Self {
-    Self {
+  /// Returns an EOF token.
+  pub(crate) fn eof(span: Span) -> Token {
+    Token {
       kind: TokenKind::Eof,
-      data: TokenData::Eof,
+      data: TokenData::None,
       span,
     }
   }
 
-  #[must_use]
-  pub const fn data(&self) -> &TokenData {
-    &self.data
+  /// Returns an unknown token
+  pub(crate) fn unknown(span: Span, sl: String) -> Token {
+    Token {
+      kind: TokenKind::Unknown,
+      data: TokenData::FromUnknown(sl),
+      span,
+    }
   }
 
-  #[must_use]
-  pub const fn kind(&self) -> TokenKind {
+  /// Returns the token's kind.
+  pub fn kind(&self) -> TokenKind {
     self.kind
   }
-
-  #[must_use]
+  
+  /// Returns the token's span.
   pub fn span(&self) -> Span {
-    // const-cloning of Ranges is unsupported
     self.span.clone()
   }
-}
 
-pub struct Tokens<'s> {
-  found_eof: bool,
-  lexer: logos::Lexer<'s, Atom>,
-}
-
-/// Lazy iterator over Token  
-///   
-/// Lazily turns `Atom`s into `Token`s, returning `Token::Eof` after the last `Atom`. Returns `None` afterwards.
-impl<'s> Tokens<'s> {
-  pub(crate) const fn new(lexer: logos::Lexer<'s, Atom>) -> Self {
-    Self {
-      found_eof: false,
-      lexer,
+  /// Returns the token data as a `Symbol`.
+  ///
+  /// # Panics
+  ///
+  /// This method will panic if the token's type is not
+  /// of a symbol. Ensure `token.kind()` returns `TokenKind::Symbol`
+  /// before using this method.
+  pub fn as_symbol(&self) -> Symbol {
+    if let TokenData::Atom(atom) = &self.data {
+      atom.symbol()
+    } else {
+      panic!("token data is NOT a symbol, either EOF or Unknown. Have you matched against `token.kind()`?")
     }
   }
-
-  /// Returns `Result::Ok` with the next token if its kind matches `kind`, `Result::Err` with the next token otherwise.  
-  ///   
-  /// # Errors
-  /// The top-level error is a lexer error, meaning something wrong happened while lexing. The
-  /// inner `Result` represents if the `TokenKind` matched as explained above.
-  pub fn expect(&mut self, kind: TokenKind) -> crate::Result<Result<Token, Token>> {
-    self.next().transpose().map(|mb_tok| {
-      // mb_tok should not be a None variant, since EOF must've been handled.
-      let tok =
-        mb_tok.expect("Some(Eof) handling should prevent iterator from being consumed again");
-
-      if tok.kind == kind {
-        Ok(tok)
-      } else {
-        Err(tok)
-      }
-    })
-  }
 }
 
-impl<'a> Iterator for Tokens<'a> {
-  type Item = crate::Result<Token>;
+/// Tokenizes a string into a collection of `Token`s
+pub fn tokenize(content: &str) -> Vec<Token> {
+  let mut atoms = Atom::lexer(content);
+  let mut tokens = Vec::new();
 
-  fn next(&mut self) -> Option<Self::Item> {
-    if self.found_eof {
-      return None;
-    }
+  while let Some(tok_result) = atoms.next() {
+    let span = atoms.span();
 
-    Some(match self.lexer.next() {
-      Some(atom) => atom.to_token(self.lexer.slice().into(), self.lexer.span()),
-      None => {
-        self.found_eof = true;
-        Ok(Token::eof(self.lexer.span()))
-      }
-    })
+    let tok = match tok_result {
+      Ok(tok) => tok.into_token(span),
+      Err(()) => Token::unknown(span, atoms.slice().to_owned()),
+    };
+
+    tokens.push(tok);
   }
-}
 
-impl<'a> FusedIterator for Tokens<'a> {}
+  let last = atoms.span().end;
+  tokens.push(Token::eof(last..last));
+
+  tokens
+}

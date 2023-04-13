@@ -1,12 +1,17 @@
 #![warn(clippy::unwrap_used)]
 
-pub use error::Result;
-use ast::Node;
+use lupin_lexer::Token;
+use parsers::{Assignment, Node};
 
-pub fn create_ast(content: &str) -> crate::Result<ast::Ast> {
-  let mut tokens = lupin_lexer::tokenize(content);
-  ast::Ast::parse(&mut tokens)
+pub type Result<T> = std::result::Result<T, error::ParseError>;
+
+pub fn parse(tokens: Vec<Token>) -> crate::Result<Assignment> {
+  let mut state = parser_state::ParserState::new(tokens);
+
+  Assignment::parse(&mut state)
 }
 
-pub mod ast;
+pub mod parser_state;
 pub mod error;
+pub mod parsers;
+

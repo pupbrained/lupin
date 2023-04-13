@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.70"
 lupin_parser = { version = "0.1.0", path = "../lupin_parser" }
+lupin_lexer = { version = "0.1.0", path = "../lupin_lexer" }
