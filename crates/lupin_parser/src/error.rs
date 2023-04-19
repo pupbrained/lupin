@@ -2,8 +2,8 @@ use lupin_lexer::{Token, TokenKind, Symbol};
 
 #[derive(Debug)]
 pub enum Expectation {
-  Token(TokenKind),
-  Symbol(Symbol),
+  Token(Vec<TokenKind>),
+  Symbol(Vec<Symbol>),
   Node(&'static str),
   Binop,
 }

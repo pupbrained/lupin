@@ -1,6 +1,8 @@
-use logos::Logos;
-use crate::atom::{Atom, Symbol};
-use std::ops::Range;
+use {
+  crate::atom::{Atom, Symbol},
+  logos::Logos,
+  std::ops::Range,
+};
 
 /// The start and end index of a token.
 pub type Span = Range<usize>;
@@ -45,8 +47,8 @@ pub struct Token {
 
 impl Token {
   /// Returns a token with a `TokenKind` of `Identifier`.
-  pub(crate) fn identifier(atom: Atom, span: Span) -> Token {
-    Token {
+  pub(crate) const fn identifier(atom: Atom, span: Span) -> Self {
+    Self {
       kind: TokenKind::Identifier,
       data: TokenData::Atom(atom),
       span,
@@ -54,16 +56,17 @@ impl Token {
   }
 
   /// Returns a token with a `TokenKind` of `Symbol`.
-  pub(crate) fn symbol(atom: Atom, span: Span) -> Token {
-    Token {
+  pub(crate) const fn symbol(atom: Atom, span: Span) -> Self {
+    Self {
       kind: TokenKind::Symbol,
       data: TokenData::Atom(atom),
       span,
     }
   }
+
   /// Returns a token with a `TokenKind` of `Literal`.
-  pub(crate) fn literal(atom: Atom, span: Span) -> Token {
-    Token {
+  pub(crate) const fn literal(atom: Atom, span: Span) -> Self {
+    Self {
       kind: TokenKind::Literal,
       data: TokenData::Atom(atom),
       span,
@@ -71,8 +74,8 @@ impl Token {
   }
 
   /// Returns an EOF token.
-  pub(crate) fn eof(span: Span) -> Token {
-    Token {
+  pub(crate) const fn eof(span: Span) -> Self {
+    Self {
       kind: TokenKind::Eof,
       data: TokenData::None,
       span,
@@ -80,8 +83,9 @@ impl Token {
   }
 
   /// Returns an unknown token
-  pub(crate) fn unknown(span: Span, sl: String) -> Token {
-    Token {
+  #[must_use]
+  pub(crate) const fn unknown(span: Span, sl: String) -> Self {
+    Self {
       kind: TokenKind::Unknown,
       data: TokenData::FromUnknown(sl),
       span,
@@ -89,11 +93,13 @@ impl Token {
   }
 
   /// Returns the token's kind.
-  pub fn kind(&self) -> TokenKind {
+  #[must_use]
+  pub const fn kind(&self) -> TokenKind {
     self.kind
   }
-  
+
   /// Returns the token's span.
+  #[must_use]
   pub fn span(&self) -> Span {
     self.span.clone()
   }
@@ -105,16 +111,18 @@ impl Token {
   /// This method will panic if the token's type is not
   /// of a symbol. Ensure `token.kind()` returns `TokenKind::Symbol`
   /// before using this method.
-  pub fn as_symbol(&self) -> Symbol {
+  #[must_use]
+  pub fn as_symbol(&self, symbol: Symbol) -> Option<&Token> {
     if let TokenData::Atom(atom) = &self.data {
-      atom.symbol()
+      atom.symbol().filter(|s| s == &symbol).replace(self)
     } else {
-      panic!("token data is NOT a symbol, either EOF or Unknown. Have you matched against `token.kind()`?")
+      None
     }
   }
 }
 
 /// Tokenizes a string into a collection of `Token`s
+#[must_use]
 pub fn tokenize(content: &str) -> Vec<Token> {
   let mut atoms = Atom::lexer(content);
   let mut tokens = Vec::new();

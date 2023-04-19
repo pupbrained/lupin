@@ -1,5 +1,7 @@
-use logos::{Logos, Lexer};
-use crate::token::{Token, Span};
+use {
+  crate::token::{Span, Token},
+  logos::{Lexer, Logos},
+};
 
 fn as_string(lex: &mut Lexer<Atom>) -> Option<String> {
   lex.slice().parse().ok()
@@ -19,12 +21,13 @@ pub enum Symbol {
   /// The plus sign (`+`)
   Plus,
   /// Two colons, turbofish (`::`)
-  TwoColons
+  TwoColons,
 }
 
 impl Symbol {
-  pub fn is_binop(&self) -> bool {
-    use Symbol::*;
+  #[must_use]
+  pub const fn is_binop(&self) -> bool {
+    use Symbol::Plus;
     matches!(self, Plus)
   }
 }
@@ -90,20 +93,15 @@ impl Atom {
   }
 
   /// Returns the kind of symbol represented by the atom.
-  ///
-  /// # Panics
-  ///
-  /// This method will panic if the atom does not represent
-  /// a symbol.
-  pub fn symbol(&self) -> Symbol {
+  pub fn symbol(&self) -> Option<Symbol> {
     match self {
-      Atom::Assign => Symbol::Assign,
-      Atom::Comma => Symbol::Comma,
-      Atom::RParen => Symbol::RParen,
-      Atom::LParen => Symbol::LParen,
-      Atom::Plus => Symbol::Plus,
-      Atom::TwoColons => Symbol::TwoColons,
-      _ => panic!("atom is NOT a symbol"),
+      Self::Assign => Some(Symbol::Assign),
+      Self::Comma => Some(Symbol::Comma),
+      Self::RParen => Some(Symbol::RParen),
+      Self::LParen => Some(Symbol::LParen),
+      Self::Plus => Some(Symbol::Plus),
+      Self::TwoColons => Some(Symbol::TwoColons),
+      _ => None,
     }
   }
 }
